@@ -12,6 +12,7 @@ pkgs.mkShell {
     menhir
     merlin
     dune
+    ppx_deriving
 
   ]);
 }

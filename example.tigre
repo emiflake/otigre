@@ -1,0 +1,16 @@
+let
+  var x := 42
+
+  type number = int
+
+  type point =
+    { x : number
+    , y : number
+    }
+
+  var point := point { x = x, y = 10 }
+in
+  print(x);
+  print(point);
+  print(point.x)
+end

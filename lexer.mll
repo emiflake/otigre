@@ -10,10 +10,15 @@
 rule token = parse
   | [' ' '\t' '\n']
       { token lexbuf }
+
+  (* Start comment, goes into `comment` lexer *)
   | "/*"
       { comment_depth := 1;
         comment lexbuf;
         token lexbuf }
+
+  (* Start string, goes into `read_string` lexer *)
+  | '"' { read_string (Buffer.create 17) lexbuf }
 
   (* Punctuation *)
   | ',' { COMMA }
@@ -45,6 +50,23 @@ rule token = parse
   | '|' { OR }
   | ":=" { ASSIGN }
 
+  (* Keywords *)
+  | "nil" { NIL }
+  | "if" { IF }
+  | "then" { THEN }
+  | "else" { ELSE }
+  | "while" { WHILE }
+  | "for" { FOR }
+  | "let" { LET }
+  | "in" { IN }
+  | "end" { END }
+  | "var" { VAR }
+  | "type" { TYPE }
+  | "break" { BREAK }
+  | "do" { DO }
+  | "function" { FUNCTION }
+  | "array" { ARRAY }
+
   | eof
       { EOF }
 
@@ -66,3 +88,24 @@ and comment = parse
       { raise (Error (Printf.sprintf "At offset %d: unterminated comment.\n" (Lexing.lexeme_start lexbuf))) }
   | _
       { comment lexbuf }
+
+(* TODO: add support for other escape sequences *)
+and read_string buf =
+  parse
+  | '"'       { STRING (Buffer.contents buf) }
+  | '\\' '/'  { Buffer.add_char buf '/'; read_string buf lexbuf }
+  | '\\' '\\' { Buffer.add_char buf '\\'; read_string buf lexbuf }
+  | '\\' 'b'  { Buffer.add_char buf '\b'; read_string buf lexbuf }
+  | '\\' 'f'  { Buffer.add_char buf '\012'; read_string buf lexbuf }
+  | '\\' 'n'  { Buffer.add_char buf '\n'; read_string buf lexbuf }
+  | '\\' 'r'  { Buffer.add_char buf '\r'; read_string buf lexbuf }
+  | '\\' 't'  { Buffer.add_char buf '\t'; read_string buf lexbuf }
+  | [^ '"' '\\']+
+    { Buffer.add_string buf (Lexing.lexeme lexbuf);
+      read_string buf lexbuf
+    }
+  | _ { raise (Error (Printf.sprintf "At offset %d: Illegal string character: %s"
+                        (Lexing.lexeme_start lexbuf)
+                        (Lexing.lexeme lexbuf))) }
+  | eof { raise (Error (Printf.sprintf "At offset %d: String is not terminated"
+                           (Lexing.lexeme_start lexbuf))) }

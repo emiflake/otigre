@@ -2,9 +2,10 @@
  (name main)
  (libraries
    core)
- (preprocess (pps ppx_jane ppx_expect ppx_let)))
+ (preprocess (pps ppx_jane ppx_let ppx_deriving ppx_deriving.show)))
 
 (ocamllex lexer)
 
 (menhir
- (modules parser))
+ (modules parser)
+  (flags --explain))
