@@ -8,9 +8,19 @@ let
     , y : number
     }
 
+  function identityInt(value : int) : int = value
+
   var point := point { x = x, y = 10 }
 in
   print(x);
   print(point);
-  print(point.x)
+  print(point.x);
+
+  if point.x > 5 then
+    print("Yeah it's big")
+  else
+    print("No it's smol. big smol");
+
+  if point.x <> 0 then
+    print("But it's not 0. Defo not 0.")
 end

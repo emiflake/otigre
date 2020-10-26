@@ -28,6 +28,11 @@ type expr =
   | ExprSeq of expr list
   | LetBinding of decl list * expr list
   | RecordConstructor of ident * field list
+  | ArrayConstructor of ident * expr * expr
+  | IfThenElse of expr * expr * expr
+  | While of expr * expr
+  | For of ident * expr * expr * expr
+  | Break
   [@@deriving show]
 
  and lvalue =
@@ -49,8 +54,8 @@ type expr =
 
  and decl =
     TypeDeclaration of ident * typ
-  | VariableDeclaration of ident * expr
-  | VariableDeclarationTyped of ident * ident * expr
+  | VariableDeclaration of ident * ident option * expr
+  | FunctionDeclaration of ident * typ_field list * ident option * expr
   [@@deriving show]
 
 let show_op op =
@@ -67,6 +72,10 @@ let show_op op =
   | Gte -> ">="
   | And -> "&"
   | Or -> "|"
+
+(* Deprecated pretty printing rules, using ppx_deriving.show instead
+
+
 
 let show_list sep show_elem list =
   let rec go xs =
@@ -148,3 +157,4 @@ let rec show_expr expr =
 
    | VariableDeclarationTyped (ident, typ_ident, expr) ->
      Printf.sprintf "VariableDeclarationTyped(%s, %s, %s)" ident typ_ident (show_expr expr)
+*)

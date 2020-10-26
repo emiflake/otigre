@@ -7,7 +7,7 @@
 %token <int> INT
 
 (* Special *)
-%token RETURN EOF
+%token EOF
 
 (* Keywords *)
 %token ARRAY BREAK DO ELSE END FOR FUNCTION IF IN LET NIL OF THEN TO TYPE VAR WHILE
@@ -28,6 +28,9 @@
 %token ASSIGN
 
 (* Precedence of operators *)
+%nonassoc DO
+%nonassoc THEN
+%nonassoc ELSE
 %left ASSIGN
 %left OR
 %left AND
@@ -68,14 +71,32 @@ expr:
     | LPAREN; es = separated_list(SEMICOLON, expr); RPAREN
     { Ast.ExprSeq(es) }
 
-
-    | LET; decls = list(declaration); IN; es = separated_list(SEMICOLON, expr); END
-    { Ast.LetBinding(decls, es) }
-
     | id = ID; LBRACKET;
       assignments = separated_list(COMMA, k = ID; EQ; v = expr { (k, v) });
       RBRACKET
     { Ast.RecordConstructor(id, assignments) }
+
+    (* TODO: implement array constructor, not possible due to ambiguous grammar up to recursion *)
+    (* | id = ID; LBRACE; sz = expr; RBRACE; OF; v = expr; END
+     * { Ast.ArrayConstructor(id, sz, v) } *)
+
+    | IF c = expr; THEN; t = expr
+    { Ast.IfThenElse(c, t, Ast.Nil) } (* NOTE: Defaults to Nil on false branch*)
+
+    | IF c = expr; THEN; t = expr; ELSE; f = expr
+    { Ast.IfThenElse(c, t, f) }
+
+    | WHILE c = expr; DO; l = expr;
+    { Ast.While(c, l) }
+
+    | FOR id = ID; ASSIGN; low = expr; TO; high = expr; DO; l = expr
+    { Ast.For(id, low, high, l) }
+
+    | BREAK;
+    { Ast.Break }
+
+    | LET; decls = list(declaration); IN; es = separated_list(SEMICOLON, expr); END
+    { Ast.LetBinding(decls, es) }
 
 
 type_declaration:
@@ -97,16 +118,22 @@ type_field:
 
 variable_declaration:
     | VAR; id = ID; ASSIGN; e = expr
-    { Ast.VariableDeclaration(id, e) }
+    { Ast.VariableDeclaration(id, Option.None, e) }
 
     | VAR; id = ID; COLON; ty = ID; ASSIGN; e = expr
-    { Ast.VariableDeclarationTyped(id, ty, e) }
+    { Ast.VariableDeclaration(id, Option.Some(ty), e) }
+
+function_declaration:
+    | FUNCTION; id = ID; LPAREN; type_fields = separated_list(COMMA, type_field); RPAREN; EQ; body = expr;
+    { Ast.FunctionDeclaration(id, type_fields, Option.None, body) }
+
+    | FUNCTION; id = ID; LPAREN; type_fields = separated_list(COMMA, type_field); RPAREN; COLON; typ_id = ID; EQ; body = expr;
+    { Ast.FunctionDeclaration(id, type_fields, Option.Some(typ_id), body) }
 
 declaration:
     | ty_decl = type_declaration { ty_decl }
     | var_decl = variable_declaration { var_decl }
- (*     | function_declaration *)
-
+    | fun_decl = function_declaration { fun_decl }
 
 %inline binary_expr(Lhs, Op, Rhs):
    lhs = Lhs; op = Op; rhs = Rhs
