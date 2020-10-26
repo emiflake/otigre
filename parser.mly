@@ -28,8 +28,7 @@
 %token ASSIGN
 
 
-(* Precedence of operators *)
-
+(* Precedence *)
 %nonassoc DO
 %nonassoc THEN
 %nonassoc ELSE
@@ -47,7 +46,8 @@
 %%
 
 main:
-    | ex = expr EOF { ex }
+    | ex = expr EOF
+    { ex }
 
 expr:
     | str = STRING
@@ -74,12 +74,12 @@ expr:
     | LPAREN; es = separated_list(SEMICOLON, expr); RPAREN
     { Ast.ExprSeq(es) }
 
-    | id = ID; LBRACKET;
+    | id = type_id; LBRACKET;
       assignments = separated_list(COMMA, k = ID; EQ; v = expr { (k, v) });
       RBRACKET
     { Ast.RecordConstructor(id, assignments) }
 
-    | ARRAY; id = ID; LBRACE; size = expr; RBRACE; OF; e = expr;
+    | ARRAY; id = type_id; LBRACE; size = expr; RBRACE; OF; e = expr;
     { Ast.ArrayConstructor(id, size, e) }
 
     | IF c = expr; THEN; t = expr
@@ -102,7 +102,7 @@ expr:
 
 
 type_declaration:
-    | TYPE; id = ID; EQ; ty = typ { Ast.TypeDeclaration(id, ty) }
+    | TYPE; id = type_id; EQ; ty = typ { Ast.TypeDeclaration(id, ty) }
 
 typ:
     | LBRACKET; type_fields = separated_list(COMMA, type_field); RBRACKET
@@ -174,3 +174,6 @@ lvalue:
 
     | lv = lvalue; LBRACE; e = expr; RBRACE
     { Ast.LValueIndex (lv, e) }
+
+type_id:
+    | id = ID { id }
