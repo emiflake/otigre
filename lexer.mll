@@ -8,7 +8,11 @@
 
 
 rule token = parse
-  | [' ' '\t' '\n']
+
+  | [ '\n' ]
+      { Lexing.new_line lexbuf;
+        token lexbuf }
+  | [' ' '\t']
       { token lexbuf }
 
   (* Start comment, goes into `comment` lexer *)
@@ -59,11 +63,13 @@ rule token = parse
   | "for" { FOR }
   | "let" { LET }
   | "in" { IN }
+  | "of" { OF }
   | "end" { END }
   | "var" { VAR }
   | "type" { TYPE }
   | "break" { BREAK }
   | "do" { DO }
+  | "to" { TO }
   | "function" { FUNCTION }
   | "array" { ARRAY }
 
@@ -84,6 +90,8 @@ and comment = parse
   | "*/"
       { decr comment_depth;
         if !comment_depth = 0 then () else comment lexbuf }
+  | '\n' { Lexing.new_line lexbuf;
+           comment lexbuf }
   | eof
       { raise (Error (Printf.sprintf "At offset %d: unterminated comment.\n" (Lexing.lexeme_start lexbuf))) }
   | _

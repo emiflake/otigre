@@ -27,7 +27,9 @@
 
 %token ASSIGN
 
+
 (* Precedence of operators *)
+
 %nonassoc DO
 %nonassoc THEN
 %nonassoc ELSE
@@ -38,6 +40,7 @@
 %left PLUS MINUS
 %left TIMES DIVIDE
 %nonassoc UMINUS
+%nonassoc OF
 
 %start <Ast.expr> main
 
@@ -76,9 +79,8 @@ expr:
       RBRACKET
     { Ast.RecordConstructor(id, assignments) }
 
-    (* TODO: implement array constructor, not possible due to ambiguous grammar up to recursion *)
-    (* | id = ID; LBRACE; sz = expr; RBRACE; OF; v = expr; END
-     * { Ast.ArrayConstructor(id, sz, v) } *)
+    | ARRAY; id = ID; LBRACE; size = expr; RBRACE; OF; e = expr;
+    { Ast.ArrayConstructor(id, size, e) }
 
     | IF c = expr; THEN; t = expr
     { Ast.IfThenElse(c, t, Ast.Nil) } (* NOTE: Defaults to Nil on false branch*)
@@ -164,6 +166,11 @@ binop_expression:
     | MINUS; e = expr { Ast.Negate e } %prec UMINUS
 
 lvalue:
-    | id = ID { Ast.LValueId id }
-    | lv = lvalue; DOT; id = ID { Ast.LValueAt (lv, id) }
-    | lv = lvalue; LBRACE; e = expr; RBRACE { Ast.LValueIndex (lv, e) }
+    | id = ID
+    { Ast.LValueId id }
+
+    | lv = lvalue; DOT; id = ID
+    { Ast.LValueAt (lv, id) }
+
+    | lv = lvalue; LBRACE; e = expr; RBRACE
+    { Ast.LValueIndex (lv, e) }

@@ -1,6 +1,10 @@
-let
-  var x := 42
 
+/* Comments can be put anywhere!
+** /* Even in themselves! */
+** Oh my!
+*/
+let
+  /* Pretty type, isn't it? */
   type number = int
 
   type point =
@@ -10,17 +14,21 @@ let
 
   function identityInt(value : int) : int = value
 
+
   var point := point { x = x, y = 10 }
 in
-  print(x);
-  print(point);
-  print(point.x);
+  print(array int [42] of 0);
 
-  if point.x > 5 then
-    print("Yeah it's big")
-  else
-    print("No it's smol. big smol");
+  for x := 0 to 10
+  do (
+    printf("x is %d\n", x);
 
-  if point.x <> 0 then
-    print("But it's not 0. Defo not 0.")
+    if point.x > 5 then
+      print("Yeah it's big")
+    else
+      print("No it's smol. big smol");
+    if point.x <> 0 then
+      print("But it's not 0. Defo not 0.")
+  );
+nil
 end
